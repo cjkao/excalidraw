@@ -9,7 +9,7 @@ Object.defineProperty(window, "crypto", {
     getRandomValues: (arr: number[]) =>
       arr.forEach((v, i) => (arr[i] = Math.floor(Math.random() * 256))),
     subtle: {
-      generateKey: () => {},
+      generateKey: () => { },
       exportKey: () => ({ k: "sTdLvMC_M3V8_vGa3UVRDg" }),
     },
   },
@@ -17,7 +17,7 @@ Object.defineProperty(window, "crypto", {
 
 jest.mock("../excalidraw-app/data/firebase.ts", () => {
   const loadFromFirebase = async () => null;
-  const saveToFirebase = () => {};
+  const saveToFirebase = () => { };
   const isSavedToFirebase = () => true;
   const loadFilesFromFirebase = async () => ({
     loadedFiles: [],
@@ -40,10 +40,10 @@ jest.mock("../excalidraw-app/data/firebase.ts", () => {
 jest.mock("socket.io-client", () => {
   return () => {
     return {
-      close: () => {},
-      on: () => {},
-      off: () => {},
-      emit: () => {},
+      close: () => { },
+      on: () => { },
+      off: () => { },
+      emit: () => { },
     };
   };
 });

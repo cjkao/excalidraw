@@ -20,6 +20,6 @@ export enum SCENE {
 }
 
 export const FIREBASE_STORAGE_PREFIXES = {
-  shareLinkFiles: `/files/shareLinks`,
+  shareLinkFiles: `files/shareLinks`,
   collabFiles: `/files/rooms`,
 };

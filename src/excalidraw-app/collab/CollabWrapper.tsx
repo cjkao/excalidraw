@@ -222,7 +222,7 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
             room: this.portal.roomId,
           }),
         );
-      } catch {}
+      } catch { }
     }
   });
 
@@ -232,7 +232,7 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
     ),
   ) => {
     try {
-      await saveToFirebase(this.portal, syncableElements);
+      // await saveToFirebase(this.portal, syncableElements);
     } catch (error) {
       console.error(error);
     }

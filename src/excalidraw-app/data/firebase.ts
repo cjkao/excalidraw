@@ -70,17 +70,17 @@ const loadFirestore = async () => {
 };
 
 export const loadFirebaseStorage = async () => {
-  const firebase = await _getFirebase();
-  if (!firebaseStoragePromise) {
-    firebaseStoragePromise = import(
-      /* webpackChunkName: "storage" */ "firebase/storage"
-    );
-  }
-  if (firebaseStoragePromise !== true) {
-    await firebaseStoragePromise;
-    firebaseStoragePromise = true;
-  }
-  return firebase;
+  // const firebase = await _getFirebase();
+  // if (!firebaseStoragePromise) {
+  //   firebaseStoragePromise = import(
+  //     /* webpackChunkName: "storage" */ "firebase/storage"
+  //   );
+  // }
+  // if (firebaseStoragePromise !== true) {
+  //   await firebaseStoragePromise;
+  //   firebaseStoragePromise = true;
+  // }
+  // return firebase;
 };
 
 interface FirebaseStoredScene {
@@ -139,7 +139,8 @@ export const isSavedToFirebase = (
   if (portal.socket && portal.roomId && portal.roomKey) {
     const sceneVersion = getSceneVersion(elements);
 
-    return firebaseSceneVersionCache.get(portal.socket) === sceneVersion;
+    return false;
+    // return firebaseSceneVersionCache.get(portal.socket) === sceneVersion;
   }
   // if no room exists, consider the room saved so that we don't unnecessarily
   // prevent unload (there's nothing we could do at that point anyway)
@@ -153,7 +154,7 @@ export const saveFilesToFirebase = async ({
   prefix: string;
   files: { id: FileId; buffer: Uint8Array }[];
 }) => {
-  const firebase = await loadFirebaseStorage();
+  // const firebase = await loadFirebaseStorage();
 
   const erroredFiles = new Map<FileId, true>();
   const savedFiles = new Map<FileId, true>();
@@ -161,17 +162,22 @@ export const saveFilesToFirebase = async ({
   await Promise.all(
     files.map(async ({ id, buffer }) => {
       try {
-        await firebase
-          .storage()
-          .ref(`${prefix}/${id}`)
-          .put(
-            new Blob([buffer], {
-              type: MIME_TYPES.binary,
-            }),
-            {
-              cacheControl: `public, max-age=${FILE_CACHE_MAX_AGE_SEC}`,
-            },
-          );
+        const xhttp = new XMLHttpRequest();
+        xhttp.open("POST", `http://localhost:8090${prefix}${id}`, true);
+        xhttp.send(buffer);
+
+        // await firebase
+        //   .storage()
+        //   .ref(`${prefix}/${id}`)
+        //   .put(
+        //     new Blob([buffer], {
+        //       type: MIME_TYPES.binary,
+        //     }),
+        //     {
+        //       cacheControl: `public, max-age=${FILE_CACHE_MAX_AGE_SEC}`,
+        //     },
+        //   );
+        console.log("save " + buffer.byteLength + " len " + prefix + "-" + id);
         savedFiles.set(id, true);
       } catch (error) {
         erroredFiles.set(id, true);
@@ -240,25 +246,26 @@ export const loadFromFirebase = async (
   roomKey: string,
   socket: SocketIOClient.Socket | null,
 ): Promise<readonly ExcalidrawElement[] | null> => {
-  const firebase = await loadFirestore();
-  const db = firebase.firestore();
+  return null;
+  // const firebase = await loadFirestore();
+  // const db = firebase.firestore();
 
-  const docRef = db.collection("scenes").doc(roomId);
-  const doc = await docRef.get();
-  if (!doc.exists) {
-    return null;
-  }
-  const storedScene = doc.data() as FirebaseStoredScene;
-  const ciphertext = storedScene.ciphertext.toUint8Array();
-  const iv = storedScene.iv.toUint8Array();
+  // const docRef = db.collection("scenes").doc(roomId);
+  // const doc = await docRef.get();
+  // if (!doc.exists) {
+  //   return null;
+  // }
+  // const storedScene = doc.data() as FirebaseStoredScene;
+  // const ciphertext = storedScene.ciphertext.toUint8Array();
+  // const iv = storedScene.iv.toUint8Array();
 
-  const elements = await decryptElements(roomKey, iv, ciphertext);
+  // const elements = await decryptElements(roomKey, iv, ciphertext);
 
-  if (socket) {
-    firebaseSceneVersionCache.set(socket, getSceneVersion(elements));
-  }
+  // if (socket) {
+  //   firebaseSceneVersionCache.set(socket, getSceneVersion(elements));
+  // }
 
-  return restoreElements(elements, null);
+  // return restoreElements(elements, null);
 };
 
 export const loadFilesFromFirebase = async (
@@ -272,13 +279,13 @@ export const loadFilesFromFirebase = async (
   await Promise.all(
     [...new Set(filesIds)].map(async (id) => {
       try {
-        const url = `https://firebasestorage.googleapis.com/v0/b/${
-          FIREBASE_CONFIG.storageBucket
-        }/o/${encodeURIComponent(prefix.replace(/^\//, ""))}%2F${id}`;
-        const response = await fetch(`${url}?alt=media`);
+        const response = await fetch(`http://localhost:8090/${prefix}${id}`);
+
         if (response.status < 400) {
+
           const arrayBuffer = await response.arrayBuffer();
 
+          console.log(`get ${arrayBuffer.byteLength} ${prefix}-${id}`);
           const { data, metadata } = await decompressData<BinaryFileMetadata>(
             new Uint8Array(arrayBuffer),
             {
@@ -299,7 +306,13 @@ export const loadFilesFromFirebase = async (
         erroredFiles.set(id, true);
         console.error(error);
       }
-    }),
+
+    }
+
+
+
+
+    ),
   );
 
   return { loadedFiles, erroredFiles };

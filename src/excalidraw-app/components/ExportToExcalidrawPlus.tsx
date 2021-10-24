@@ -19,7 +19,7 @@ const exportToExcalidrawPlus = async (
   appState: AppState,
   files: BinaryFiles,
 ) => {
-  const firebase = await loadFirebaseStorage();
+  // const firebase = await loadFirebaseStorage();
 
   const id = `${nanoid(12)}`;
 
@@ -36,15 +36,15 @@ const exportToExcalidrawPlus = async (
     },
   );
 
-  await firebase
-    .storage()
-    .ref(`/migrations/scenes/${id}`)
-    .put(blob, {
-      customMetadata: {
-        data: JSON.stringify({ version: 2, name: appState.name }),
-        created: Date.now().toString(),
-      },
-    });
+  // await firebase
+  //   .storage()
+  //   .ref(`/migrations/scenes/${id}`)
+  //   .put(blob, {
+  //     customMetadata: {
+  //       data: JSON.stringify({ version: 2, name: appState.name }),
+  //       created: Date.now().toString(),
+  //     },
+  //   });
 
   const filesMap = new Map<FileId, BinaryFileData>();
   for (const element of elements) {
@@ -66,9 +66,9 @@ const exportToExcalidrawPlus = async (
     });
   }
 
-  window.open(
-    `https://plus.excalidraw.com/import?excalidraw=${id},${encryptionKey}`,
-  );
+  // window.open(
+  //   `https://plus.excalidraw.com/import?excalidraw=${id},${encryptionKey}`,
+  // );
 };
 
 export const ExportToExcalidrawPlus: React.FC<{
