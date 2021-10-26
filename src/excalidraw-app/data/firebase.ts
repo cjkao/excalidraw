@@ -285,7 +285,7 @@ export const loadFilesFromFirebase = async (
 
           const arrayBuffer = await response.arrayBuffer();
 
-          console.log(`get ${arrayBuffer.byteLength} ${prefix}-${id}`);
+          // console.log(`get ${arrayBuffer.byteLength} ${prefix}-${id}`);
           const { data, metadata } = await decompressData<BinaryFileMetadata>(
             new Uint8Array(arrayBuffer),
             {
