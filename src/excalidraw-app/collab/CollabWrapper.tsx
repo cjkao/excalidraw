@@ -11,6 +11,7 @@ import {
 import { getSceneVersion } from "../../packages/excalidraw/index";
 import { Collaborator, Gesture } from "../../types";
 import {
+  debounce,
   preventUnload,
   resolvablePromise,
   withBatchedUpdates,
@@ -618,8 +619,13 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
   public getSceneElementsIncludingDeleted = () => {
     return this.excalidrawAPI.getSceneElementsIncludingDeleted();
   };
-
-  onPointerUpdate = (payload: {
+  private deferByCollabs = () => {
+    if (this.collaborators.size <= 2) return 10;
+    if (this.collaborators.size <= 4) return 50;
+    if (this.collaborators.size <= 7) return 200;
+    return 1000;
+  };
+  onPointerUpdate = debounce((payload: {
     pointer: SocketUpdateDataSource["MOUSE_LOCATION"]["payload"]["pointer"];
     button: SocketUpdateDataSource["MOUSE_LOCATION"]["payload"]["button"];
     pointersMap: Gesture["pointers"];
@@ -627,14 +633,16 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
     payload.pointersMap.size < 2 &&
       this.portal.socket &&
       this.portal.broadcastMouseLocation(payload);
-  };
+  },
+    this.deferByCollabs(),
+  );
 
   onIdleStateChange = (userState: UserIdleState) => {
     this.setState({ userState });
     this.portal.broadcastIdleChange(userState);
   };
 
-  broadcastElements = (elements: readonly ExcalidrawElement[]) => {
+  broadcastElements = debounce((elements: readonly ExcalidrawElement[]) => {
     if (
       getSceneVersion(elements) >
       this.getLastBroadcastedOrReceivedSceneVersion()
@@ -643,7 +651,7 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
       this.lastBroadcastedOrReceivedSceneVersion = getSceneVersion(elements);
       this.queueBroadcastAllElements();
     }
-  };
+  }, this.deferByCollabs());
 
   queueBroadcastAllElements = throttle(() => {
     this.portal.broadcastScene(
