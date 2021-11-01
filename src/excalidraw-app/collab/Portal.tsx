@@ -47,6 +47,9 @@ class Portal {
     });
     this.socket.on("room-user-change", (clients: string[]) => {
       this.collab.setCollaborators(clients);
+      this.collab.getContextValue();
+      this.collab.forceUpdate();
+      //here to throttle
     });
   }
 
@@ -138,7 +141,7 @@ class Portal {
           (syncAll ||
             !this.broadcastedElementVersions.has(element.id) ||
             element.version >
-              this.broadcastedElementVersions.get(element.id)!) &&
+            this.broadcastedElementVersions.get(element.id)!) &&
           this.collab.isSyncableElement(element)
         ) {
           acc.push({

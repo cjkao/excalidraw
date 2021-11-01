@@ -11,7 +11,7 @@ import {
 import { getSceneVersion } from "../../packages/excalidraw/index";
 import { Collaborator, Gesture } from "../../types";
 import {
-  debounce,
+  // debounce,
   preventUnload,
   resolvablePromise,
   withBatchedUpdates,
@@ -66,6 +66,7 @@ import {
   ReconciledElements,
   reconcileElements as _reconcileElements,
 } from "./reconciliation";
+import { debounce } from "lodash";
 
 interface CollabState {
   modalIsShown: boolean;
@@ -619,12 +620,16 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
     return this.excalidrawAPI.getSceneElementsIncludingDeleted();
   };
   private deferByCollabs = () => {
-    if (this.collaborators.size <= 2) return 10;
-    if (this.collaborators.size <= 4) return 50;
-    if (this.collaborators.size <= 7) return 200;
-    return 1000;
+    // console.log("collab:" + this.collaborators.size);
+    if (this.collaborators.size <= 3) {
+      return 0;
+    }
+    if (this.collaborators.size <= 9) {
+      return this.collaborators.size * 50;
+    }
+    return 500;
   };
-  onPointerUpdate = debounce((payload: {
+  onPointerUpdate = (payload: {
     pointer: SocketUpdateDataSource["MOUSE_LOCATION"]["payload"]["pointer"];
     button: SocketUpdateDataSource["MOUSE_LOCATION"]["payload"]["button"];
     pointersMap: Gesture["pointers"];
@@ -632,16 +637,14 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
     payload.pointersMap.size < 2 &&
       this.portal.socket &&
       this.portal.broadcastMouseLocation(payload);
-  },
-    this.deferByCollabs(),
-  );
+  };
 
   onIdleStateChange = (userState: UserIdleState) => {
     this.setState({ userState });
     this.portal.broadcastIdleChange(userState);
   };
 
-  broadcastElements = debounce((elements: readonly ExcalidrawElement[]) => {
+  broadcastElements = (elements: readonly ExcalidrawElement[]) => {
     if (
       getSceneVersion(elements) >
       this.getLastBroadcastedOrReceivedSceneVersion()
@@ -650,7 +653,7 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
       this.lastBroadcastedOrReceivedSceneVersion = getSceneVersion(elements);
       this.queueBroadcastAllElements();
     }
-  }, this.deferByCollabs());
+  };
 
   queueBroadcastAllElements = throttle(() => {
     this.portal.broadcastScene(
@@ -699,10 +702,13 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
 
     this.contextValue.isCollaborating = () => this.isCollaborating;
     this.contextValue.username = this.state.username;
-    this.contextValue.onPointerUpdate = this.onPointerUpdate;
+    this.contextValue.onPointerUpdate = debounce(
+      this.onPointerUpdate,
+      this.deferByCollabs(),
+    );
     this.contextValue.initializeSocketClient = this.initializeSocketClient;
     this.contextValue.onCollabButtonClick = this.onCollabButtonClick;
-    this.contextValue.broadcastElements = this.broadcastElements;
+    this.contextValue.broadcastElements = debounce(this.broadcastElements, this.deferByCollabs());
     this.contextValue.fetchImageFilesFromFirebase = this.fetchImageFilesFromFirebase;
     return this.contextValue;
   };
