@@ -232,7 +232,7 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
   ) => {
     try {
       // await saveToFirebase(this.portal, syncableElements);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
     }
   };
@@ -349,7 +349,7 @@ class CollabWrapper extends PureComponent<Props, CollabState> {
             scrollToContent: true,
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         // log the error and move on. other peers will sync us the scene.
         console.error(error);
       }

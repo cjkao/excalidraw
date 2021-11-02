@@ -28,7 +28,7 @@ const _loadFirebase = async () => {
   if (!isFirebaseInitialized) {
     try {
       firebase.initializeApp(FIREBASE_CONFIG);
-    } catch (error) {
+    } catch (error: any) {
       // trying initialize again throws. Usually this is harmless, and happens
       // mainly in dev (HMR)
       if (error.code === "app/duplicate-app") {
@@ -178,7 +178,7 @@ export const saveFilesToFirebase = async ({
         //   );
         console.log("save " + buffer.byteLength + " len " + prefix + "-" + id);
         savedFiles.set(id, true);
-      } catch (error) {
+      } catch (error: any) {
         erroredFiles.set(id, true);
       }
     }),
@@ -303,7 +303,7 @@ export const loadFilesFromFirebase = async (
         } else {
           erroredFiles.set(id, true);
         }
-      } catch (error) {
+      } catch (error: any) {
         erroredFiles.set(id, true);
         console.error(error);
       }
